@@ -12,7 +12,8 @@ import java.util.Map;
 
 public class RegisterRequest extends StringRequest {
     //서버 URL 설정(php파일 연동)
-    final static private String URL = "http://172.20.26.202:8888/Register.php";
+    final static private String URL = "http://192.168.0.7:8888/Register.php";
+    //집: 192.168.45.185
     //final static private String URL = "https://591f-211-227-109-84.ngrok.io//Register.php";
     private Map<String ,String > map;
 
@@ -23,7 +24,7 @@ public class RegisterRequest extends StringRequest {
         map.put("userID",userID);
         map.put("userPassword", userPassword);
         map.put("userName", userName);
-        map.put("uerAge", userAge + "");
+        map.put("userAge", userAge + "");
 
     }
 

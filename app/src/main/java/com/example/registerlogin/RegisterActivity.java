@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -16,6 +17,8 @@ import com.android.volley.toolbox.Volley;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class RegisterActivity extends AppCompatActivity {
 
@@ -42,7 +45,8 @@ public class RegisterActivity extends AppCompatActivity {
                 String userID = et_id.getText().toString();
                 String userPass = et_pass.getText().toString();
                 String userName = et_name.getText().toString();
-                int userAge=Integer.parseInt((et_age.getText().toString()));
+                int userAge= Integer.parseInt((et_age.getText().toString()));
+
 
                 Response.Listener<String> responseListner = new Response.Listener<String>() {
                     @Override
@@ -59,7 +63,8 @@ public class RegisterActivity extends AppCompatActivity {
                                 return;
                             }
                         } catch (JSONException e) {
-                            throw new RuntimeException(e);
+                            Log.i("tagconvertstr", "" + e.toString());
+                            //throw new RuntimeException(e);
                         }
                     }
                 };
