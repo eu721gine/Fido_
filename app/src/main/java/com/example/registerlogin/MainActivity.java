@@ -14,7 +14,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.toolbox.Volley;
-import com.example.registerlogin.FingerprintActivity;
+import com.example.registerlogin.BiometricActivity;
 import com.example.registerlogin.BuyRequest;
 import com.example.registerlogin.R;
 import com.example.registerlogin.SignatureActivity;
@@ -64,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
                 Intent intent = getIntent();
                 String userID = intent.getStringExtra("userID");
 
-                intent = new Intent(MainActivity.this, FingerprintActivity.class);
+                intent = new Intent(MainActivity.this, BiometricActivity.class);
                 intent.putExtra("userID", userID);
                 startActivity(intent);
             }
