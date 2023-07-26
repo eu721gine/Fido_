@@ -1,56 +1,73 @@
+
+
+//package com.example.registerlogin;
+//
+//import android.util.Base64;
+//import android.util.Log;
+//
+//import androidx.appcompat.app.AppCompatActivity;
+//
+//import java.security.InvalidKeyException;
+//import java.security.KeyStore;
+//import java.security.KeyStoreException;
+//import java.security.NoSuchAlgorithmException;
+//import java.security.PrivateKey;
+//import java.security.Signature;
+//import java.security.SignatureException;
+//import java.security.UnrecoverableEntryException;
+//import java.security.cert.CertificateException;
+//
+//public class SignatureActivity extends AppCompatActivity {
+//    private static final String TAG = "SignatureActivity";
+//    private static final String alias = "my_key";
+//
+//    public String signChallenge(String challenge, PrivateKey privateKey) {
+//        try {
+//            Signature signature = Signature.getInstance("SHA256withRSA");
+//            signature.initSign(privateKey);
+//            signature.update(challenge.getBytes());
+//            byte[] encodedSignature = signature.sign();
+//            String signedChallenge = Base64.encodeToString(encodedSignature, Base64.DEFAULT);
+//            Log.d(TAG, "서명: " + signedChallenge); // 로그 출력
+//            return signedChallenge;
+//        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
+//            e.printStackTrace();
+//            return null;
+//        }
+//    }
+//}
 package com.example.registerlogin;
 
-import static android.security.KeyChain.getPrivateKey;
-
-import androidx.appcompat.app.AppCompatActivity;
-
-import android.database.sqlite.SQLiteDatabase;
 import android.util.Base64;
 import android.util.Log;
 import android.widget.Toast;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import androidx.appcompat.app.AppCompatActivity;
+
 import java.security.InvalidKeyException;
-import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
-import java.security.Security;
 import java.security.Signature;
 import java.security.SignatureException;
 
-import java.security.KeyStore;
-import java.security.UnrecoverableEntryException;
-import java.security.cert.CertificateException;
-
-
-public class SignatureActivity extends AppCompatActivity{
-
-    public byte[] encodedSignature;
+public class SignatureActivity extends AppCompatActivity {
     private static final String TAG = "SignatureActivity";
+    //private static final String KEY_NAME = "my_key";
 
-    //전자서명 생성하는 함수
-        public SignatureActivity(String challenge, PrivateKey privateKey){
-            try {
-                Signature signature = Signature.getInstance("SHA256withRSA");
-                signature.initSign(privateKey);
+    public byte[] signChallenge(String challenge, PrivateKey privateKey) {
+        try {
+            Signature signature = Signature.getInstance("SHA256withRSA");
+            signature.initSign(privateKey);
+            signature.update(challenge.getBytes());
+            byte[] encodedSignature = signature.sign();
+            String signedChallenge = Base64.encodeToString(encodedSignature, Base64.NO_WRAP);
 
-                Log.d(TAG, "initSign까진 됨");
-                signature.update(challenge.getBytes());
-                encodedSignature = signature.sign();
-                if(encodedSignature == null){
-                    Toast.makeText(getApplicationContext(), "encodedSignature is null", Toast.LENGTH_SHORT).show();
-                }else{
-                    Log.d(TAG, "Signature생성 완료");
-                }
-            } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
-                e.printStackTrace();
-            }
+            return encodedSignature;
+        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
+            Log.d(TAG, "Exception occurred: " + e.getMessage(), e); // Log the exception
+            return null;
         }
-
-    public byte[] getEncodedSignature() {
-        return encodedSignature;
     }
 
-
+    // Other methods and code within the SignatureActivity class
 }

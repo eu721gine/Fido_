@@ -1,32 +1,48 @@
 package com.example.registerlogin;
 
-import android.content.Intent;
-import android.util.Base64;
+import static com.example.registerlogin.RegisterRequest.getPinnedCertSslSocketFactory;
+
+import android.content.Context;
 
 import com.android.volley.AuthFailureError;
-import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.toolbox.StringRequest;
 
-import java.security.PublicKey;
+import java.io.IOException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class SavePKRequest extends StringRequest{
-    final static private String URL = "http://192.168.0.7:8888/SavePK.php";
-    final private Map<String , String> map;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.SSLSocketFactory;
 
-    MainActivity mainActivity=new MainActivity();
+public class SavePKRequest extends StringRequest {
+    private static final String URL = "https://192.168.0.2:443/SavePK.php";
+    private final Map<String, String> map;
 
-    public SavePKRequest(String publicKey,String userID, Response.Listener<String> listener){
-        super(Request.Method.POST, URL, listener, null);
+    public SavePKRequest(String publicKey, String userID, Response.Listener<String> listener, Response.ErrorListener errorListener, Context context) throws CertificateException, IOException, KeyStoreException, NoSuchAlgorithmException, KeyManagementException {
+        super(Method.POST, URL, listener, errorListener);
 
-        map= new HashMap<>();
+        SSLSocketFactory sslSocketFactory = getPinnedCertSslSocketFactory(context, R.raw.bpmserver);
+        HttpsURLConnection.setDefaultSSLSocketFactory(sslSocketFactory);
 
+        HttpsURLConnection.setDefaultHostnameVerifier(new HostnameVerifier() {
+            public boolean verify(String arg0, SSLSession arg1) {
+                return true;
+            }
+        });
+
+        map = new HashMap<>();
         map.put("userID", userID);
         map.put("publicKey", publicKey);
-
     }
+
+    @Override
     protected Map<String, String> getParams() throws AuthFailureError {
         return map;
     }

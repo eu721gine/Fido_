@@ -14,11 +14,14 @@ import android.widget.Toast;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.toolbox.Volley;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import java.io.IOException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
 
 public class RegisterActivity extends AppCompatActivity {
 
@@ -47,7 +50,6 @@ public class RegisterActivity extends AppCompatActivity {
                 String userName = et_name.getText().toString();
                 int userAge= Integer.parseInt((et_age.getText().toString()));
 
-
                 Response.Listener<String> responseListner = new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
@@ -68,8 +70,22 @@ public class RegisterActivity extends AppCompatActivity {
                         }
                     }
                 };
-                //서버로 Volley를 이용하여 요청
-                RegisterRequest registerRequest = new RegisterRequest(userID, userPass,userName, userAge, responseListner);
+
+//                //서버로 Volley를 이용하여 요청
+                RegisterRequest registerRequest = null;
+                try {
+                    registerRequest = new RegisterRequest(userID, userPass, userName, userAge, responseListner, RegisterActivity.this);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                } catch (CertificateException e) {
+                    throw new RuntimeException(e);
+                } catch (KeyStoreException e) {
+                    throw new RuntimeException(e);
+                } catch (NoSuchAlgorithmException e) {
+                    throw new RuntimeException(e);
+                } catch (KeyManagementException e) {
+                    throw new RuntimeException(e);
+                }
                 RequestQueue queue = Volley.newRequestQueue(RegisterActivity.this);
                 queue.add(registerRequest);
 
@@ -77,4 +93,5 @@ public class RegisterActivity extends AppCompatActivity {
         });
 
     }
+
 }
