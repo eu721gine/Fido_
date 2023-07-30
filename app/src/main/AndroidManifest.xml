@@ -30,7 +30,7 @@
             android:name=".MainActivity"
             android:exported="false"/>
         <activity
-            android:name=".FingerprintActivity"
+            android:name=".BiometricActivity"
             android:exported="false">
         </activity>
     </application>

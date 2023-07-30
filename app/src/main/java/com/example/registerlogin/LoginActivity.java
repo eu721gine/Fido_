@@ -4,7 +4,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -51,28 +50,34 @@ public class LoginActivity extends AppCompatActivity {
                 String userID = et_id.getText().toString();
                 String userPass = et_pass.getText().toString();
 
-                Response.Listener<String> responseListner= new Response.Listener<String>() {
+                // Function to check for special characters
+                boolean containsSpecialCharacters = containsSpecialCharacters(userID) || containsSpecialCharacters(userPass);
+
+                if (containsSpecialCharacters) {
+                    Toast.makeText(LoginActivity.this, "특수문자는 사용할 수 없습니다.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                Response.Listener<String> responseListner = new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
                         try {
-                            Log.i("tagconvertstr", "["+userID+"]");
-                            JSONObject jsonObject= new JSONObject(response);
-                            boolean success= jsonObject.getBoolean("success"); // 서버통신 잘 됐냐?
+                            JSONObject jsonObject = new JSONObject(response);
+                            boolean success = jsonObject.getBoolean("success"); // 서버통신 잘 됐냐?
                             if (success) {
                                 String userID = jsonObject.getString("userID");
                                 String userPass = jsonObject.getString("userPassword");
                                 Toast.makeText(getApplicationContext(), "로그인에 성공하였습니다.", Toast.LENGTH_SHORT).show();
-                                Intent intent= new Intent(LoginActivity.this, MainActivity.class);
+                                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                                 intent.putExtra("userID", userID);
                                 intent.putExtra("userPass", userPass);
                                 startActivity(intent);
-                            }else{
+                            } else {
                                 Toast.makeText(getApplicationContext(), "로그인에 실패하였습니다.", Toast.LENGTH_SHORT).show();
                                 return;
                             }
                         } catch (JSONException e) {
-                            Log.i("tagconvertstr", "" + e.toString());
-                            //throw new RuntimeException(e);
+                            throw new RuntimeException(e);
                         }
                     }
                 };
@@ -96,5 +101,10 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
+    }
+
+    // Function to check for special characters
+    private boolean containsSpecialCharacters(String content) {
+        return content.matches(".*[^a-zA-Z0-9가-힣].*");
     }
 }

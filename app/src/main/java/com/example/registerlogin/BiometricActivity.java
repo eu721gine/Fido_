@@ -100,7 +100,8 @@ public class BiometricActivity extends AppCompatActivity {
                 } else if (delete_bioIsClicked) {
                     try {
                         deletebio();
-                    } catch (KeyStoreException e) {
+                    } catch (KeyStoreException | CertificateException | IOException |
+                             NoSuchAlgorithmException e) {
                         throw new RuntimeException(e);
                     }
                 }
@@ -296,46 +297,52 @@ public class BiometricActivity extends AppCompatActivity {
         Toast.makeText(BiometricActivity.this, message, Toast.LENGTH_SHORT).show();
     }
 
-    private void deletebio() throws KeyStoreException {
+    private void deletebio() throws KeyStoreException, CertificateException, IOException, NoSuchAlgorithmException {
+        keyStore = KeyStore.getInstance("AndroidKeyStore");
+        keyStore.load(null);
         Intent intent = getIntent();
         String userID = intent.getStringExtra("userID");
 
-
-        keyStore.deleteEntry(userID);
         if (keyStore.containsAlias(userID)){
-            Log.d(TAG, "키스토어에서 삭제 실패");
-        } else {
-            Log.d(TAG, "키스토어에서 삭제됨");
-        }
+            Log.d(TAG, "키스토어에 있습니다.");
+            keyStore.deleteEntry(userID);
+            Response.Listener<String> responseListener = new Response.Listener<String>() {
+                @Override
+                public void onResponse(String response) {
+                    try {
+                        JSONObject jsonObject = new JSONObject(response);
+                        boolean success = jsonObject.getBoolean("success");
 
-        Response.Listener<String> responseListener = new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                try {
-                    JSONObject jsonObject = new JSONObject(response);
-                    boolean success = jsonObject.getBoolean("success");
+                        if (success) {
+                            Toast.makeText(getApplicationContext(), "생체정보가 삭제되었습니다.", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(getApplicationContext(), "삭제 실패하였습니다.", Toast.LENGTH_SHORT).show();
+                        }
 
-                    if (success) {
-                        Toast.makeText(getApplicationContext(), "생체정보가 삭제되었습니다.", Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(getApplicationContext(), "삭제 실패하였습니다.", Toast.LENGTH_SHORT).show();
+                    } catch (JSONException e) {
+                        throw new RuntimeException(e);
                     }
-
-                } catch (JSONException e) {
-                    throw new RuntimeException(e);
                 }
-            }
-        };
+            };
 
-        DeleteRequest deleteRequest;
-        try {
-            deleteRequest = new DeleteRequest(userID, responseListener, BiometricActivity.this);
-        } catch (CertificateException | IOException | KeyStoreException |
-                 NoSuchAlgorithmException | KeyManagementException e) {
-            throw new RuntimeException(e);
+            DeleteRequest deleteRequest;
+            try {
+                deleteRequest = new DeleteRequest(userID, responseListener, BiometricActivity.this);
+            } catch (CertificateException | IOException | KeyStoreException |
+                     NoSuchAlgorithmException | KeyManagementException e) {
+                throw new RuntimeException(e);
+            }
+            RequestQueue queue = Volley.newRequestQueue(BiometricActivity.this);
+            queue.add(deleteRequest);
+            if (keyStore.containsAlias(userID)){
+                Log.d(TAG, "키스토어에서 삭제 실패");
+            } else {
+                Log.d(TAG, "키스토어에서 삭제됨");
+            }
+        } else {
+            Log.d(TAG, "키스토어에 없습니다. ");
         }
-        RequestQueue queue = Volley.newRequestQueue(BiometricActivity.this);
-        queue.add(deleteRequest);
+
     }
 
 

@@ -1,9 +1,6 @@
 package com.example.registerlogin;
 
-import static android.content.ContentValues.TAG;
-
 import android.content.Context;
-import android.util.Log;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Response;
@@ -18,7 +15,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,7 +32,7 @@ public class RegisterRequest extends StringRequest {
 
     private Map<String, String> map;
 
-    public RegisterRequest(String userID, String userPassword, String userName, int userAge, Response.Listener<String> listener, Context context) throws IOException, CertificateException, KeyStoreException, NoSuchAlgorithmException, KeyManagementException {
+    public RegisterRequest(String userID, String userPassword, String userName, String userAge, Response.Listener<String> listener, Context context) throws IOException, CertificateException, KeyStoreException, NoSuchAlgorithmException, KeyManagementException {
 
         super(Method.POST, URL, listener, null);
 
@@ -54,7 +50,7 @@ public class RegisterRequest extends StringRequest {
         map.put("userID", userID);
         map.put("userPassword", userPassword);
         map.put("userName", userName);
-        map.put("userAge", String.valueOf(userAge));
+        map.put("userAge", userAge);
 
     }
 

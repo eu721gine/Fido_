@@ -1,7 +1,15 @@
 package com.example.registerlogin;
 
+import android.annotation.TargetApi;
+import android.app.KeyguardManager;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.hardware.biometrics.BiometricPrompt;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.CancellationSignal;
 import android.util.Base64;
 import android.util.Log;
 import android.view.View;
@@ -10,30 +18,22 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.toolbox.Volley;
-import com.example.registerlogin.BiometricActivity;
-import com.example.registerlogin.BuyRequest;
-import com.example.registerlogin.R;
-import com.example.registerlogin.SignatureActivity;
-import com.example.registerlogin.VerifyRequest;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.security.InvalidKeyException;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.security.Signature;
-import java.security.SignatureException;
 import java.security.UnrecoverableEntryException;
 import java.security.cert.CertificateException;
 
@@ -46,10 +46,13 @@ public class MainActivity extends AppCompatActivity {
     private KeyStore keyStore;
     private PrivateKey privateKey;
     private PublicKey publicKey;
+    private BiometricPrompt.AuthenticationCallback authenticationCallback;
+    private CancellationSignal cancellationSignal = null;
     private static final String TAG = MainActivity.class.getSimpleName();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -74,18 +77,23 @@ public class MainActivity extends AppCompatActivity {
         btn_buy.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
+
                 Response.Listener<String> responseListener = new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
+
                         try {
                             JSONObject jsonObject = new JSONObject(response);
 
                             if (jsonObject.has("challenge")) {
                                 String challenge = jsonObject.getString("challenge");
+
                                 Log.d(TAG, "챌린지값: " + challenge);
 
                                 keyStore = KeyStore.getInstance("AndroidKeyStore");
                                 keyStore.load(null);
+
                                 Intent intent = getIntent();
                                 String userID = intent.getStringExtra("userID");
 
@@ -117,26 +125,72 @@ public class MainActivity extends AppCompatActivity {
                                     Log.d(TAG, "개인키 초기화 안됨");
                                 }
 
-                                KeyStore.PrivateKeyEntry privateKeyEntry = (KeyStore.PrivateKeyEntry) keyStore.getEntry(userID, null);
-                                privateKey = privateKeyEntry.getPrivateKey();
+                                authenticationCallback = new BiometricPrompt.AuthenticationCallback() {
+                                    @Override
+                                    public void onAuthenticationFailed() {
+                                        super.onAuthenticationFailed();
+                                        notifyUser("Authentication Failed");
+                                    }
 
-                                SignatureActivity signatureActivity = new SignatureActivity();
-                                byte[] signedChallenge = signatureActivity.signChallenge(challenge, privateKey);
+                                    @Override
+                                    public void onAuthenticationError(int errorCode, CharSequence errString) {
+                                        super.onAuthenticationError(errorCode, errString);
+                                        notifyUser("Authentication Error: " + errString);
+                                    }
 
-                                if (signedChallenge != null) {
-                                    // Method invocation was successful
-                                    Log.d(TAG, "Signed Challenge: " + Base64.encodeToString(signedChallenge, Base64.NO_WRAP));
-                                } else {
-                                    // Method invocation failed
-                                    Log.e(TAG, "Failed to sign the challenge");
+                                    @Override
+                                    public void onAuthenticationSucceeded(BiometricPrompt.AuthenticationResult result) {
+                                        super.onAuthenticationSucceeded(result);
+                                        notifyUser("인증에 성공하였습니다");
+
+                                        KeyStore.PrivateKeyEntry privateKeyEntry = null;
+                                        try {
+                                            privateKeyEntry = (KeyStore.PrivateKeyEntry) keyStore.getEntry(userID, null);
+                                        } catch (KeyStoreException e) {
+                                            throw new RuntimeException(e);
+                                        } catch (NoSuchAlgorithmException e) {
+                                            throw new RuntimeException(e);
+                                        } catch (UnrecoverableEntryException e) {
+                                            throw new RuntimeException(e);
+                                        }
+                                        privateKey = privateKeyEntry.getPrivateKey();
+
+                                        SignatureActivity signatureActivity = new SignatureActivity();
+                                        byte[] signedChallenge = signatureActivity.signChallenge(challenge, privateKey);
+
+                                        if (signedChallenge != null) {
+                                            // Method invocation was successful
+                                            Log.d(TAG, "Signed Challenge: " + Base64.encodeToString(signedChallenge, Base64.NO_WRAP));
+                                        } else {
+                                            // Method invocation failed
+                                            Log.e(TAG, "Failed to sign the challenge");
+                                        }
+
+                                        try {
+                                            verifySignature(signedChallenge, challenge, userID); // userID에 실제 사용자의 ID를 전달해야 함
+                                        } catch (KeyStoreException | CertificateException |
+                                                 IOException | NoSuchAlgorithmException |
+                                                 UnrecoverableEntryException |
+                                                 KeyManagementException e) {
+                                            throw new RuntimeException(e);
+                                        }
+
+                                    }
+                                };
+                                if (checkBiometricSupport()) {
+                                    BiometricPrompt biometricPrompt = new BiometricPrompt.Builder(MainActivity.this)
+                                            .setTitle("지문 인증을 시작합니다")
+                                            .setSubtitle("지문 인증 시작")
+                                            .setDescription("지문")
+                                            .setNegativeButton("Cancel", getMainExecutor(), new DialogInterface.OnClickListener() {
+                                                @Override
+                                                public void onClick(DialogInterface dialogInterface, int i) {
+                                                    notifyUser("Authentication Cancelled");
+                                                }
+                                            }).build();
+
+                                    biometricPrompt.authenticate(getCancellationSignal(), getMainExecutor(), authenticationCallback);
                                 }
-                                //Toast.makeText(getApplicationContext(), "signed된 메시지2: " + Base64.encodeToString(signedChallenge, Base64.DEFAULT), Toast.LENGTH_SHORT).show();
-
-                                //Intent intent = getIntent();
-                                //String userID = intent.getStringExtra("userID");
-                                verifySignature(signedChallenge, challenge, userID); // userID에 실제 사용자의 ID를 전달해야 함
-
-
 
                             } else {
                                 Log.e(TAG, "Challenge key not found in JSON response");
@@ -146,8 +200,6 @@ public class MainActivity extends AppCompatActivity {
                             throw new RuntimeException(e);
                         } catch (CertificateException | KeyStoreException | IOException |
                                  NoSuchAlgorithmException | UnrecoverableEntryException e) {
-                            throw new RuntimeException(e);
-                        } catch (KeyManagementException e) {
                             throw new RuntimeException(e);
                         }
                     }
@@ -161,19 +213,12 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = getIntent();
         String userID = intent.getStringExtra("userID");
         tv_id.setText(userID);
+
+
+
+
     }
 
-    private boolean checkPrivateKeyAccess(String keyAlias) {
-        try {
-            KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
-            keyStore.load(null);
-
-            return keyStore.entryInstanceOf(keyAlias, KeyStore.PrivateKeyEntry.class);
-        } catch (KeyStoreException | CertificateException | NoSuchAlgorithmException | IOException e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
 
     private void verifySignature(byte[] signString, String chall, String userID) throws KeyStoreException, CertificateException, IOException, NoSuchAlgorithmException, UnrecoverableEntryException, KeyManagementException {
         KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
@@ -206,6 +251,44 @@ public class MainActivity extends AppCompatActivity {
         VerifyRequest verifyRequest = new VerifyRequest(userID, chall,Base64.encodeToString(signString, Base64.NO_WRAP),stringpublicKey, responseListener, MainActivity.this);
         RequestQueue queue = Volley.newRequestQueue(this);
         queue.add(verifyRequest);
+    }
+    private void notifyUser(String message) {
+        Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show();
+    }
+
+    private CancellationSignal getCancellationSignal() {
+        cancellationSignal = new CancellationSignal();
+        cancellationSignal.setOnCancelListener(() -> notifyUser("Authentication was Cancelled by the user"));
+        return cancellationSignal;
+    }
+
+    private boolean checkPrivateKeyAccess(String keyAlias) {
+        try {
+            KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
+            keyStore.load(null);
+
+            return keyStore.entryInstanceOf(keyAlias, KeyStore.PrivateKeyEntry.class);
+        } catch (KeyStoreException | CertificateException | NoSuchAlgorithmException | IOException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+    @TargetApi(Build.VERSION_CODES.P)
+    public Boolean checkBiometricSupport() {
+        KeyguardManager keyguardManager = (KeyguardManager) getSystemService(Context.KEYGUARD_SERVICE);
+        if (!keyguardManager.isDeviceSecure()) {
+            notifyUser("Fingerprint authentication has not been enabled in settings");
+            return false;
+        }
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.USE_BIOMETRIC) != PackageManager.PERMISSION_GRANTED) {
+            notifyUser("Fingerprint Authentication Permission is not enabled");
+            return false;
+        }
+        if (getPackageManager().hasSystemFeature(PackageManager.FEATURE_FINGERPRINT)) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
 }
