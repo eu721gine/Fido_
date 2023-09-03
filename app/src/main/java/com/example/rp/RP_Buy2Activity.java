@@ -180,6 +180,8 @@ public class RP_Buy2Activity extends AppCompatActivity {
         publicKey = privateKeyEntry.getCertificate().getPublicKey();
         String stringpublicKey = Base64.encodeToString(publicKey.getEncoded(), Base64.NO_WRAP);
 
+        String p_id = "2";
+
         Response.Listener<String> responseListener = new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
@@ -201,7 +203,7 @@ public class RP_Buy2Activity extends AppCompatActivity {
             }
         };
 
-        RP_VerifyRequest verifyRequest = new RP_VerifyRequest(userID, chall, Base64.encodeToString(signString, Base64.NO_WRAP), stringpublicKey, responseListener, RP_Buy2Activity.this);
+        RP_VerifyRequest verifyRequest = new RP_VerifyRequest(userID, p_id, chall, Base64.encodeToString(signString, Base64.NO_WRAP), stringpublicKey, responseListener, RP_Buy2Activity.this);
         RequestQueue queue = Volley.newRequestQueue(this);
         queue.add(verifyRequest);
     }

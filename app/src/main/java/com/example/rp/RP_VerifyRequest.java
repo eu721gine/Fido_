@@ -28,10 +28,12 @@ public class RP_VerifyRequest extends StringRequest {
     final static private String URL = "https://192.168.0.2:443/Verify.php";
     private Map<String ,String> map;
 
-    public RP_VerifyRequest(String userID, String message, String signature,String publicKey, Response.Listener<String> listener, Context context) throws CertificateException, IOException, KeyStoreException, NoSuchAlgorithmException, KeyManagementException {
+
+    public RP_VerifyRequest(String userID, String p_id, String message, String signature,String publicKey, Response.Listener<String> listener, Context context) throws CertificateException, IOException, KeyStoreException, NoSuchAlgorithmException, KeyManagementException {
         super(Method.POST, URL, listener, null);
 
         Log.d(TAG, "아이디: " + userID);
+        Log.d(TAG, "제품id: " + p_id);
         Log.d(TAG, "챌린지: " + message);
         Log.d(TAG, "서명  : " + signature);
         //Log.d(TAG, "공개키: " + publicKey);
@@ -47,6 +49,7 @@ public class RP_VerifyRequest extends StringRequest {
 
         map= new HashMap<>();
         map.put("userID", userID);
+        map.put("p_id",p_id);
         map.put("message", message);
         map.put("signature", signature);
         map.put("publicKey", publicKey);

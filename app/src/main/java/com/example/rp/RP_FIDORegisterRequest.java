@@ -1,4 +1,4 @@
-package com.example.duduhgee;
+package com.example.rp;
 
 import static com.example.rp.RP_RegisterRequest.getPinnedCertSslSocketFactory;
 
@@ -9,6 +9,7 @@ import androidx.annotation.Nullable;
 import com.android.volley.AuthFailureError;
 import com.android.volley.Response;
 import com.android.volley.toolbox.StringRequest;
+import com.example.duduhgee.R;
 
 import java.io.IOException;
 import java.security.KeyManagementException;
@@ -23,12 +24,12 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocketFactory;
 
-public class FIDORegisterRequest extends StringRequest {
+public class RP_FIDORegisterRequest extends StringRequest {
     final static private String URL = "https://192.168.0.2:443/FIDORegisterRequest.php";
 
     private Map<String ,String > map;
 
-    public FIDORegisterRequest(String userID, Response.Listener<String> listener, Context context) throws CertificateException, IOException, KeyStoreException, NoSuchAlgorithmException, KeyManagementException {
+    public RP_FIDORegisterRequest(String userID, Response.Listener<String> listener, Context context) throws CertificateException, IOException, KeyStoreException, NoSuchAlgorithmException, KeyManagementException {
         super(Method.POST, URL, listener, null);
 
         SSLSocketFactory sslSocketFactory = getPinnedCertSslSocketFactory(context, R.raw.bpmserver);

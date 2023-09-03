@@ -62,7 +62,10 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // Start the new activity when the ImageView is clicked
-                Intent intent = new Intent(MainActivity.this, RP_BuyActivity.class);
+                Intent intent = getIntent();
+                String userID = intent.getStringExtra("userID");
+
+                intent = new Intent(MainActivity.this, RP_BuyActivity.class);
                 intent.putExtra("userID", userID);
                 startActivity(intent);
             }

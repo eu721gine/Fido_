@@ -162,7 +162,7 @@ public class RP_BuyActivity extends AppCompatActivity {
                 };
                 RP_BuyRequest buyRequest = null;
                 try {
-                    buyRequest = new RP_BuyRequest(userID, p_id, responseListener, RP_BuyActivity.this);
+                    buyRequest = new RP_BuyRequest(userID, "1", responseListener, RP_BuyActivity.this);
                 } catch (CertificateException | NoSuchAlgorithmException | KeyManagementException |
                          IOException | KeyStoreException e) {
                     throw new RuntimeException(e);
@@ -180,6 +180,29 @@ public class RP_BuyActivity extends AppCompatActivity {
         publicKey = privateKeyEntry.getCertificate().getPublicKey();
         String stringpublicKey = Base64.encodeToString(publicKey.getEncoded(), Base64.NO_WRAP);
 
+        Response.Listener<String> responseListener2 = new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                try {
+                    JSONObject jsonObject = new JSONObject(response);
+                    boolean success = jsonObject.getBoolean("success");
+
+                    if (success) {
+                        // 검증 성공
+                        Toast.makeText(getApplicationContext(), "구매정보 저장되었습니다.", Toast.LENGTH_SHORT).show();
+
+                    } else {
+                        // 검증 실패
+                        Toast.makeText(getApplicationContext(), "구매정보 저장 실패. ", Toast.LENGTH_SHORT).show();
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    Toast.makeText(getApplicationContext(), "구매정보 저장 오류.", Toast.LENGTH_SHORT).show();
+                }
+            }
+        };
+
+
         Response.Listener<String> responseListener = new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
@@ -190,6 +213,9 @@ public class RP_BuyActivity extends AppCompatActivity {
                     if (success) {
                         // 검증 성공
                         Toast.makeText(getApplicationContext(), "서명이 확인되었습니다.", Toast.LENGTH_SHORT).show();
+                        RP_SavePaymentRequest savePaymentRequest = new RP_SavePaymentRequest(userID, "tissue", "1500", responseListener2, RP_BuyActivity.this);
+                        RequestQueue queue2 = Volley.newRequestQueue(RP_BuyActivity.this);
+                        queue2.add(savePaymentRequest);
                     } else {
                         // 검증 실패
                         Toast.makeText(getApplicationContext(), "서명이 유효하지 않습니다. ", Toast.LENGTH_SHORT).show();
@@ -197,11 +223,14 @@ public class RP_BuyActivity extends AppCompatActivity {
                 } catch (JSONException e) {
                     e.printStackTrace();
                     Toast.makeText(getApplicationContext(), "서명 검증 중 오류가 발생했습니다.", Toast.LENGTH_SHORT).show();
+                } catch (CertificateException | IOException | KeyStoreException |
+                         NoSuchAlgorithmException | KeyManagementException e) {
+                    throw new RuntimeException(e);
                 }
             }
         };
 
-        RP_VerifyRequest verifyRequest = new RP_VerifyRequest(userID, chall, Base64.encodeToString(signString, Base64.NO_WRAP), stringpublicKey, responseListener, RP_BuyActivity.this);
+        RP_VerifyRequest verifyRequest = new RP_VerifyRequest(userID, "1", chall, Base64.encodeToString(signString, Base64.NO_WRAP), stringpublicKey, responseListener, RP_BuyActivity.this);
         RequestQueue queue = Volley.newRequestQueue(this);
         queue.add(verifyRequest);
     }

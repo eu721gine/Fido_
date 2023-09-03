@@ -29,6 +29,7 @@ import com.android.volley.toolbox.Volley;
 import com.example.asm.ASM_checkKeyPairExistence;
 import com.example.rp.RP_DeleteAccountRequest;
 import com.example.rp.RP_DeleteRequest;
+import com.example.rp.RP_FIDORegisterRequest;
 import com.example.rp.RP_PaymentDetailRequest;
 import com.example.rp.RP_SavePKRequest;
 
@@ -232,11 +233,11 @@ public class BiometricActivity extends AppCompatActivity {
                         }
                     }
                 };
-                FIDORegisterRequest fidoRegisterRequest = null;
+                RP_FIDORegisterRequest fidoRegisterRequest = null;
                 try {
                     Intent intent = getIntent();
                     String userID = intent.getStringExtra("userID");
-                    fidoRegisterRequest = new FIDORegisterRequest(userID, responseListener, BiometricActivity.this);
+                    fidoRegisterRequest = new RP_FIDORegisterRequest(userID, responseListener, BiometricActivity.this);
                 } catch (CertificateException | IOException | KeyStoreException |
                          NoSuchAlgorithmException | KeyManagementException e) {
                     throw new RuntimeException(e);
@@ -331,9 +332,12 @@ public class BiometricActivity extends AppCompatActivity {
         btn_home.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                Intent intent = getIntent();
+                String userID = intent.getStringExtra("userID");
                 // 메인 액티비티로 이동하는 인텐트 생성
-                Intent mainIntent = new Intent(BiometricActivity.this, MainActivity.class);
-                startActivity(mainIntent);
+                intent = new Intent(BiometricActivity.this, MainActivity.class);
+                intent.putExtra("userID", userID);
+                startActivity(intent);
                 finish(); // 현재 액티비티를 종료하여 이전 액티비티로 돌아갈 수 있도록 함
             }
         });

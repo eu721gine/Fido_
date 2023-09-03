@@ -22,13 +22,17 @@ import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
+import java.util.Base64;
+
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 
 public class CardEnrollActivity extends AppCompatActivity {
     private EditText et_card, et_cvc, et_date, et_pw;
     private Button btn_enroll;
-
     private Button btn_info;
-
     private Button btn_home;
 
     @Override
@@ -43,8 +47,6 @@ public class CardEnrollActivity extends AppCompatActivity {
 
         btn_home = findViewById(R.id.btn_home);
         btn_info = findViewById(R.id.btn_info);
-
-        //회원가입 클릭시 수행
         btn_enroll = findViewById(R.id.cardenroll);
         btn_enroll.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -52,7 +54,7 @@ public class CardEnrollActivity extends AppCompatActivity {
                 Intent intent = getIntent();
                 String userID = intent.getStringExtra("userID");
 
-                //editText에 현재 입력된 값을 가져옴(get)
+                // editText에 현재 입력된 값을 가져옴(get)
                 String c_num = et_card.getText().toString();
                 String c_cvc = et_cvc.getText().toString();
                 String c_date = et_date.getText().toString();
@@ -66,7 +68,16 @@ public class CardEnrollActivity extends AppCompatActivity {
                     return;
                 }
 
-                Response.Listener<String> responseListner = new Response.Listener<String>() {
+                // AES 키 생성
+                String encryptionKey = generateAESKey();
+
+                // Encrypt the card information
+                String encryptedCardNumber = encrypt(c_num, encryptionKey);
+                String encryptedCVC = encrypt(c_cvc, encryptionKey);
+                String encryptedDate = encrypt(c_date, encryptionKey);
+                String encryptedPW = encrypt(c_pw, encryptionKey);
+
+                Response.Listener<String> responseListener = new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
                         try {
@@ -75,6 +86,7 @@ public class CardEnrollActivity extends AppCompatActivity {
                             if (success) {
                                 Toast.makeText(getApplicationContext(), "카드 등록에 성공하였습니다.", Toast.LENGTH_SHORT).show();
                                 Intent intent = new Intent(CardEnrollActivity.this, BiometricActivity.class);
+                                intent.putExtra("userID", userID);
                                 startActivity(intent);
                             } else {
                                 Toast.makeText(getApplicationContext(), "카드 등록에 실패하였습니다.", Toast.LENGTH_SHORT).show();
@@ -87,10 +99,10 @@ public class CardEnrollActivity extends AppCompatActivity {
                     }
                 };
 
-                //서버로 Volley를 이용하여 요청
+                // 서버로 Volley를 이용하여 요청
                 RP_CardEnrollRequest rp_cardEnrollRequest = null;
                 try {
-                    rp_cardEnrollRequest = new RP_CardEnrollRequest(userID, c_num, c_cvc, c_date, c_pw, responseListner, CardEnrollActivity.this);
+                    rp_cardEnrollRequest = new RP_CardEnrollRequest(userID, encryptedCardNumber, encryptedCVC, encryptedDate, encryptedPW, responseListener, CardEnrollActivity.this);
                 } catch (CertificateException | IOException | KeyStoreException |
                          NoSuchAlgorithmException | KeyManagementException e) {
                     throw new RuntimeException(e);
@@ -127,5 +139,33 @@ public class CardEnrollActivity extends AppCompatActivity {
     // Function to check for special characters
     public boolean containsOnlyNumbers(String input) {
         return input.matches("^[0-9]+$");
+    }
+
+    // Function to generate AES key
+    private String generateAESKey() {
+        try {
+            // AES 키 생성
+            KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
+            keyGenerator.init(256); // 256 비트 길이의 AES 키 생성
+            SecretKey secretKey = keyGenerator.generateKey();
+            return Base64.getEncoder().encodeToString(secretKey.getEncoded());
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    // Function to encrypt using AES
+    private String encrypt(String input, String key) {
+        try {
+            SecretKey secretKey = new SecretKeySpec(Base64.getDecoder().decode(key), "AES");
+            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+            byte[] encryptedBytes = cipher.doFinal(input.getBytes("UTF-8"));
+            return Base64.getEncoder().encodeToString(encryptedBytes);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }
