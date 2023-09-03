@@ -60,7 +60,7 @@ public class ASM_SignatureActivity extends AppCompatActivity {
             MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
             byte[] hashBytes = messageDigest.digest(challenge.getBytes());
 
-            Signature signature = Signature.getInstance("SHA256withRSA");
+            Signature signature = Signature.getInstance("SHA256withRSA"); // SHA256withRSA 알고리즘 사용
             signature.initSign(privateKey);
             signature.update(hashBytes);
             byte[] encodedSignature = signature.sign();

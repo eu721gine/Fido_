@@ -62,6 +62,7 @@ public class RP_Buy2Activity extends AppCompatActivity {
             public void onClick(View view) throws RuntimeException {
                 Intent intent = getIntent();
                 String userID = intent.getStringExtra("userID");
+                String p_id = "2";
 
                 Response.Listener<String> responseListener = new Response.Listener<String>() {
                     @Override
@@ -82,6 +83,12 @@ public class RP_Buy2Activity extends AppCompatActivity {
                                 Log.d(TAG,"Policy: "+policy);
                                 Log.d(TAG, "Transaction: " + transaction);
 
+                                JSONObject sn = new JSONObject();
+                                sn.put("challenge", challenge);
+                                sn.put("transaction", transaction);
+                                String snString = sn.toString();
+                                Log.d(TAG, "snString: " + snString);
+
                                 authenticationCallback = new BiometricPrompt.AuthenticationCallback() {
                                     @Override
                                     public void onAuthenticationFailed() {
@@ -101,11 +108,11 @@ public class RP_Buy2Activity extends AppCompatActivity {
                                         notifyUser("인증에 성공하였습니다");
 
                                         ASM_SignatureActivity signatureActivity = new ASM_SignatureActivity();
-                                        byte[] signedChallenge = signatureActivity.signChallenge(challenge, userID);
+                                        byte[] signedChallenge = signatureActivity.signChallenge(snString, userID);
 
                                         if (signedChallenge != null) {
                                             // Method invocation was successful
-                                            Log.d(TAG, "Signed Challenge: " + Base64.encodeToString(signedChallenge, Base64.NO_WRAP));
+                                            Log.d(TAG, "Signed Challenge: " + signedChallenge);
 
                                             Intent successIntent = new Intent(RP_Buy2Activity.this, RP_BuySuccessActivity.class);
                                             successIntent.putExtra("purchase_item", "toothbrush"); // 구매한 항목 정보 전달
@@ -155,7 +162,7 @@ public class RP_Buy2Activity extends AppCompatActivity {
                 };
                 RP_BuyRequest buyRequest = null;
                 try {
-                    buyRequest = new RP_BuyRequest(userID, responseListener, RP_Buy2Activity.this);
+                    buyRequest = new RP_BuyRequest(userID, p_id, responseListener, RP_Buy2Activity.this);
                 } catch (CertificateException | NoSuchAlgorithmException | KeyManagementException |
                          IOException | KeyStoreException e) {
                     throw new RuntimeException(e);

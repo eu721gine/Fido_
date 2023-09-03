@@ -29,7 +29,7 @@ public class RP_BuyRequest extends StringRequest {
 
     private Map<String ,String> map;
 
-    public RP_BuyRequest(String userID ,Response.Listener<String> listener, Context context) throws CertificateException, IOException, KeyStoreException, NoSuchAlgorithmException, KeyManagementException {
+    public RP_BuyRequest(String userID, String p_id, Response.Listener<String> listener, Context context) throws CertificateException, IOException, KeyStoreException, NoSuchAlgorithmException, KeyManagementException {
         super(Method.POST, URL, listener, null);
 
         SSLSocketFactory sslSocketFactory = getPinnedCertSslSocketFactory(context, R.raw.bpmserver);
@@ -43,6 +43,7 @@ public class RP_BuyRequest extends StringRequest {
 
         map= new HashMap<>();
         map.put("userID",userID);
+        map.put("p_id", p_id);
     }
 
     @Nullable
