@@ -128,9 +128,13 @@ public class CardEnrollActivity extends AppCompatActivity {
         btn_home.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                Intent intent = getIntent();
+                String userID = intent.getStringExtra("userID");
+
                 // 메인 액티비티로 이동하는 인텐트 생성
-                Intent mainIntent = new Intent(CardEnrollActivity.this, MainActivity.class);
-                startActivity(mainIntent);
+                intent = new Intent(CardEnrollActivity.this, MainActivity.class);
+                intent.putExtra("userID",userID);
+                startActivity(intent);
                 finish(); // 현재 액티비티를 종료하여 이전 액티비티로 돌아갈 수 있도록 함
             }
         });
