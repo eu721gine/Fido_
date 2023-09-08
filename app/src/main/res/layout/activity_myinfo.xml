@@ -152,6 +152,7 @@
 
                         <Button
                             android:id="@+id/btn_card"
+                            android:background="#ffc6c6"
                             android:layout_width="131dp"
                             android:layout_height="wrap_content"
                             android:text="카드정보등록" />
@@ -170,6 +171,7 @@
 
                         <Button
                             android:id="@+id/start_authentication"
+                            android:background="#f9f9f9"
                             android:layout_width="130dp"
                             android:layout_height="wrap_content"
                             android:text="생체 인증" />
@@ -199,6 +201,7 @@
 
                         <Button
                             android:id="@+id/delete_bio"
+                            android:background="#f9f9f9"
                             android:layout_width="131dp"
                             android:layout_height="wrap_content"
                             android:text="생체정보 삭제" />
@@ -217,6 +220,7 @@
 
                         <Button
                             android:id="@+id/delete"
+                            android:background="#a4bdff"
                             android:layout_width="134dp"
                             android:layout_height="wrap_content"
                             android:text="회원 탈퇴" />

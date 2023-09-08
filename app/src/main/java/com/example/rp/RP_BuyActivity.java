@@ -114,12 +114,6 @@ public class RP_BuyActivity extends AppCompatActivity {
                                             // Method invocation was successful
                                             Log.d(TAG, "Signed Challenge: " + Base64.encodeToString(signedChallenge, Base64.NO_WRAP));
 
-                                            Intent successIntent = new Intent(RP_BuyActivity.this, RP_BuySuccessActivity.class);
-                                            successIntent.putExtra("purchase_item", "tissue"); // 구매한 항목 정보 전달
-                                            successIntent.putExtra("signed_challenge", signedChallenge); // 서명된 도전 정보 전달
-                                            startActivity(successIntent);
-                                            finish();
-
                                         } else {
                                             // Method invocation failed
                                             Log.e(TAG, "Failed to sign the challenge");
@@ -190,7 +184,10 @@ public class RP_BuyActivity extends AppCompatActivity {
                     if (success) {
                         // 검증 성공
                         Toast.makeText(getApplicationContext(), "구매정보 저장되었습니다.", Toast.LENGTH_SHORT).show();
-
+                        Intent successIntent = new Intent(RP_BuyActivity.this, RP_BuySuccessActivity.class);
+                        successIntent.putExtra("purchase_item", "tissue"); // 구매한 항목 정보 전달
+                        startActivity(successIntent);
+                        finish();
                     } else {
                         // 검증 실패
                         Toast.makeText(getApplicationContext(), "구매정보 저장 실패. ", Toast.LENGTH_SHORT).show();
